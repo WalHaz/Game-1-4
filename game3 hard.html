@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallace's Brick Breaking Game</title>
+  <style>
+    /* CSS */
+
+    body {
+      background-color: darkblue;
+    }
+
+    #ball {
+      /*background-color: green;*/
+      position: fixed;
+    }
+
+    #line {
+      background-color: red;
+      width: 100%;
+      /*height: 20px;*/
+      position: fixed;
+      left: 0;
+      /*bottom: 10px;*/
+      
+    }
+
+    #paddle {
+      background-color: skyblue;
+      position: fixed;
+      border-radius: 15px;
+    }
+
+    #scoreDIV, #restartDIV {
+      color: white;
+    }
+
+    .brick {
+      position: fixed;
+      background-color: pink;
+    }
+
+    .orange {
+      background-color: #f65c51;
+    }
+
+    .green {
+      background-color: #2f5755;
+    }
+    
+    .lightblue {
+      background-color: #54c6be;
+    }
+
+    .red {
+      background-color: #e5243f;
+      }
+
+    .yellow {
+      background-color: #f7b15c;
+  </style>
+</head>
+<body>
+  <div id="scoreDIV"></div>
+  <div id="restartDIV">
+    GAMEOVER <button id="restartButton">RESTART</button>
+  </div>
+  <img id="ball" src="tabletennis.png">
+  <div id="line"></div>
+  <div id="paddle"></div>
+  <div class="brick red" id="brick1"></div>
+  <div class="brick red" id="brick2"></div>
+  <div class="brick red" id="brick3"></div>
+  <div class="brick red" id="brick4"></div>
+  <div class="brick red" id="brick5"></div>
+  <div class="brick orange" id="brick6"></div>
+  <div class="brick orange" id="brick7"></div>
+  <div class="brick orange" id="brick8"></div>
+  <div class="brick orange" id="brick9"></div>
+  <div class="brick orange" id="brick10"></div>
+  <div class="brick yellow" id="brick11"></div>
+  <div class="brick yellow" id="brick12"></div>
+  <div class="brick yellow" id="brick13"></div>
+  <div class="brick yellow" id="brick14"></div>
+  <div class="brick yellow" id="brick15"></div>
+  <div class="brick green" id="brick16"></div>
+  <div class="brick green" id="brick17"></div>
+  <div class="brick green" id="brick18"></div>
+  <div class="brick green" id="brick19"></div>
+  <div class="brick green" id="brick20"></div>
+  <div class="brick lightblue" id="brick21"></div>
+  <div class="brick lightblue" id="brick22"></div>
+  <div class="brick lightblue" id="brick23"></div>
+  <div class="brick lightblue" id="brick24"></div>
+  <div class="brick lightblue" id="brick25"></div>
+
+  <script>
+    /* JS */
+
+    //declaration
+    let ballX, ballY, ballWidth, ballHeight;
+    let fps, stepY, stepX;
+    let lineY, lineHeight;
+    let gameInterval;
+    let paddleX, paddleY, paddleWidth, paddleHeight;
+    let score;
+    let multiplier;
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    let bricks;
+    let brickSpeed;
+
+    // mouse control
+    document.addEventListener("mousemove", onMousemove, false);
+
+    // touch control for mobile or tablet
+    document.addEventListener("touchmove", onTouchmove, false);
+
+    // restart button
+    restartButton.addEventListener("click", restartGame, false);
+
+    init();
+
+    function init(){
+      ballWidth = H / 50;
+      ball.style.width = ballWidth + "px";
+      ballHeight = H / 50;
+      ball.style.height = ballHeight + "px";
+      randomPosition();
+
+      lineHeight = 20;
+      line.style.height = lineHeight + "px";
+      lineY = window.innerHeight - 10 - lineHeight;
+      line.style.top = lineY + "px";
+
+      paddleWidth = 180;
+      paddle.style.width = paddleWidth + "px";
+      paddleHeight = 30;
+      paddle.style.height = paddleHeight + "px";
+
+      paddleY = lineY - paddleHeight - 50;
+      paddle.style.top = paddleY + "px";
+
+      score = 0;
+      scoreDIV.innerText = "Score : " + score;
+
+      restartDIV.style.display = "none";
+
+      // difficulty
+      multiplier = 1.5;
+      
+      brickSpeed = 0.02;
+
+      fps = 60;
+      stepX = 5;
+      stepY = 5;
+      gameInterval = setInterval(frame, 1000/fps);
+
+      initBricks();
+    } 
+
+    function initBricks(){
+      bricks = []; // creates an array
+
+      for(let i = 0; i < 25; i++){
+        let width = W / 6;
+        let height = H / 50;
+        let left = (i % 5) * ( width + W / 24 );
+        let top = Math.floor(i / 5) * ( H / 20 + H / 80) + H / 20;
+        let brick = document.getElementsByClassName("brick")[i];
+
+        brick.style.width = width + "px";
+        brick.style.height = height + "px";
+        brick.style.left = left + "px";
+        brick.style.top = top + "px";
+
+        bricks.push({
+          width: width,
+          height: height,
+          left: left,
+          top: top,
+          element: brick,
+          broken: false,
+        });
+
+        brick.style.display = "block";
+        
+      }
+    }
+
+    function randomPosition(){
+      ballX = Math.random() * (window.innerWidth - ballWidth);
+      ball.style.left = ballX + "px";
+      ballY = H / 2;
+      ball.style.top = ballY + "px";
+    }
+
+    function frame(){
+      // increment 
+      ballY = ballY + stepY;
+      ball.style.top = ballY + "px";
+      ballX = ballX + stepX;
+      ball.style.left = ballX + "px";
+
+      // bottom boundary test
+      if( ballY + ballHeight > lineY ){
+        clearInterval(gameInterval);
+        restartDIV.style.display = "block";
+      }
+
+      // right boundary test
+      if( ballX + ballWidth > window.innerWidth ){
+        stepX = -1 * Math.abs(stepX);
+      }
+
+      // left boundary test
+      if ( ballX < 0 ) {
+        stepX = Math.abs(stepX);
+      }
+
+      // top boundary test
+      if ( ballY < 0 ) {
+        stepY = Math.abs(stepY);
+      }
+
+      // ball-paddle collision test
+      if ( ballY + ballHeight > paddleY ) {
+        if( ballX + ballWidth > paddleX && ballX < paddleX + paddleWidth ){
+
+          // Reflect the ball
+          stepY = -1 * Math.abs(stepY);
+        }
+      }
+
+      // ball-brick collision test
+      for(let brick of bricks) {
+        if( !brick.broken ){
+          // ball touch brick 
+          if ( ballY + ballHeight > brick.top && ballY < brick.top ) {
+            if( ballX + ballWidth > brick.left && ballX < brick.left + brick.width ){
+              
+              // Score
+              score = score + 10;
+              scoreDIV.innerText = "Score : " + score;0
+
+              // Reflect the ball
+              stepY = -1 * stepY;
+
+              // Make the brick invisible
+              brick.element.style.display = "none";
+
+              // ignore this brick afterwards
+              brick.broken = true;
+            }
+          } 
+        }
+      }
+
+      // moving brick
+      for(let brick of bricks){
+        if( !brick.broken ){
+          // move brick down
+          brick.top = brick.top + brickSpeed;
+          brick.element.style.top = brick.top + "px";
+
+          // bricks reach paddle test
+          if( brick.top + brick.height >= paddleY ){
+            // exit game loop
+            clearInterval(gameInterval);
+
+            // display gameover message
+            restartDIV.style.display = "block";
+          }
+        }
+      }
+
+      // redraw bricks if cleared
+      let brokenCount = 0;
+      for(let brick of bricks){
+        if( brick.broken ){
+          brokenCount = brokenCount + 1;
+        }
+      }
+      if (brokenCount == 25){
+        brickSpeed = brickSpeed + 0.01;
+        initBricks();
+      }
+
+    }
+    
+    function onMousemove(event){
+      paddleX = event.clientX;
+      paddle.style.left = paddleX + "px";
+    }
+
+    function onTouchmove(event){
+      paddleX = event.touches[0].clientX;
+      paddle.style.left = paddleX + "px";
+    }
+
+    function restartGame(){
+      init();
+      restartDIV.style.display = "none";
+    }
+
+  </script>
+</body>
+</html> 

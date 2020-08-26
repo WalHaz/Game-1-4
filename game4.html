@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallace's Space Invader Game</title>
+  <style>
+    /* CSS */
+
+    body {
+      background-color: black;
+    }
+
+    #ball {
+      /*background-color: green;*/
+      position: fixed;
+    }
+
+    #line {
+      width: 100%;
+      position: fixed;
+      left: 0;
+    }
+
+    #spaceship {
+      position: fixed;
+    }
+
+    #scoreDIV, #restartDIV, #healthDIV {
+      color: white;
+    }
+
+    .alien {
+      position: fixed;
+    }
+
+    .bullet{
+      background-color: yellow;
+      position: fixed;
+      width: 2px;
+      height: 20px;
+      border-top-left-radius: 1px;
+      border-top-right-radius: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div id="healthDIV"></div>
+  <div id="scoreDIV"></div>
+  <div id="restartDIV">
+    Game Over... Press RESTART to play again <button id="restartButton">RESTART</button>
+  </div>
+  <div id="ball"></div>
+  <div id="line"></div>
+  <img src="spaceship.png" alt="spaceship" id="spaceship" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien1" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien2" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien3" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien4" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien5" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien6" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien7" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien8" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien9" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien10" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien11" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien12" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien13" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien14" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien15" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien16" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien17" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien18" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien19" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien20" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien21" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien22" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien23" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien24" />
+  <img src="alien.png" alt="alien.png" class="alien" id="alien25" />
+
+  <script>
+    /* JS */
+
+    //declaration
+    let ballX, ballY, ballWidth, ballHeight;
+    let fps, stepY, stepX;
+    let lineY, lineHeight;
+    let gameInterval;
+    let spaceshipX, spaceshipY, spaceshipWidth, spaceshipHeight;
+    let score;
+    let multiplier;
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    let aliens;
+    let alienSpeed;
+    let health;
+    let bullets = [];
+    let bulletTimeout;
+
+    // mouse control
+    document.addEventListener("mousemove", onMousemove, false);
+
+    // touch control for mobile or tablet
+    document.addEventListener("touchmove", onTouchmove, false);
+
+    // restart button
+    restartButton.addEventListener("click", restartGame, false);
+
+    init();
+
+    function init(){
+      ballWidth = 0;
+      ball.style.width = ballWidth + "px";
+      ballHeight = 0;
+      ball.style.height = ballHeight + "px";
+      randomPosition();
+
+      lineHeight = 20;
+      line.style.height = lineHeight + "px";
+      lineY = window.innerHeight - 10 - lineHeight;
+      line.style.top = lineY + "px";
+
+      spaceshipWidth = 30;
+      spaceship.style.width = spaceshipWidth + "px";
+      spaceshipHeight = 30;
+      spaceship.style.height = spaceshipHeight + "px";
+
+      spaceshipY = lineY;
+      spaceship.style.top = spaceshipY + "px";
+
+      score = 0;
+      scoreDIV.innerText = "Score : " + score;
+
+      health = 100;
+      healthDIV.innerText = "Health : " + health;
+
+      restartDIV.style.display = "none";
+      
+      alienSpeed = 0.08;
+
+      fps = 60;
+      stepX = 5;
+      stepY = 5;
+
+      initaliens();
+      initbullets();
+
+      gameInterval = setInterval(frame, 1000/fps);      
+    } 
+
+    function initaliens(){
+      aliens = []; // creates an array
+
+      for(let i = 0; i < 25; i++){
+        let width = 30;
+        let height = 30;
+        let left = Math.random() * (window.innerWidth - width);
+        let top = -1 * height;
+        let speed = Math.random() * 0.8 + 0.2;
+        let alien = document.getElementsByClassName("alien")[i];
+
+        alien.style.width = width + "px";
+        alien.style.height = height + "px";
+        alien.style.left = left + "px";
+        alien.style.top = top + "px";
+
+        aliens.push({
+          width: width,
+          height: height,
+          left: left,
+          top: top,
+          speed: speed,
+          element: alien,
+        });
+
+        alien.style.display = "block";
+        
+      }
+    }
+
+    function initbullets(){
+      // clean up bullets of previous game
+      for(let bullet of bullets){
+        bullet.element.remove();
+      }
+
+      // creates an empty array
+      bullets = [];
+
+      // creates new bullet
+      clearTimeout(bulletTimeout);
+      bulletTimeout = setTimeout(newBullet, 666);
+    }
+
+    function newBullet(){
+      let bulletElement = document.createElement("div");
+      bulletElement.className = "bullet";
+      document.body.appendChild(bulletElement);
+
+      bulletElement.style.left = ( spaceshipX + spaceshipWidth / 2 - 2 )+ "px";
+      bulletElement.style.top = spaceshipY + "px";
+
+      bullets.push({
+        element: bulletElement,
+        left: spaceshipX + spaceshipWidth / 2 - 2,
+        top: spaceshipY,
+      });
+
+      bulletTimeout = setTimeout(newBullet, 666);
+    }
+    
+    function randomPosition(){
+      ballX = Math.random() * (window.innerWidth - ballWidth);
+      ball.style.left = ballX + "px";
+      ballY = H / 2;
+      ball.style.top = ballY + "px";
+    }
+
+    function frame(){
+      // increment 
+      //ballY = ballY + stepY;
+      ball.style.top = ballY + "px";
+      //ballX = ballX + stepX;
+      ball.style.left = ballX + "px";
+
+      // bottom boundary test
+      if( ballY + ballHeight > lineY ){
+        clearInterval(gameInterval);
+        restartDIV.style.display = "block";
+      }
+
+      // right boundary test
+      if( ballX + ballWidth > window.innerWidth ){
+        stepX = -1 * Math.abs(stepX);
+      }
+
+      // left boundary test
+      if ( ballX < 0 ) {
+        stepX = Math.abs(stepX);
+      }
+
+      // top boundary test
+      if ( ballY < 0 ) {
+        stepY = Math.abs(stepY);
+      }
+
+      // ball-spaceship collision test
+      if ( ballY + ballHeight > spaceshipY ) {
+        if( ballX + ballWidth > spaceshipX && ballX < spaceshipX + spaceshipWidth ){
+
+          // Reflect the ball
+          stepY = -1 * Math.abs(stepY);
+        }
+      }
+
+      // ball-alien collision test
+      for(let alien of aliens) {
+        if( !alien.broken ){
+          // ball touch alien 
+          if ( ballY + ballHeight > alien.top && ballY < alien.top ) {
+            if( ballX + ballWidth > alien.left && ballX < alien.left + alien.width ){
+              
+              // Score
+              score = score + 10;
+              scoreDIV.innerText = "Score : " + score;
+
+              // Reflect the ball
+              stepY = -1 * stepY;
+
+              // Make the alien invisible
+              alien.element.style.display = "none";
+
+              // ignore this alien afterwards
+              alien.broken = true;
+            }
+          } 
+        }
+      }
+
+      // moving alien
+      for(let alien of aliens){
+        if( !alien.broken ){
+          // move alien down
+          alien.top = alien.top + alien.speed;
+          alien.element.style.top = alien.top + "px";
+
+          // aliens reach spaceship test
+          if( alien.top + alien.height >= spaceshipY ){
+            // deduct health
+            health = health - 2;
+            healthDIV.innerText = "Health : " + health;
+
+            if( health <= 0 ){
+              // exit game loop
+              clearInterval(gameInterval);
+
+              // display gameover message
+              restartDIV.style.display = "block";
+            }
+            
+            reposition(alien);
+
+          }
+        }
+      }
+
+      // moving bullet
+      for(let bullet of bullets){
+        bullet.top = bullet.top - 2;
+        bullet.element.style.top = bullet.top + "px";
+
+        for(let alien of aliens){
+          //collision test
+          if(bullet.left >= alien.left && bullet.left <= alien.left + alien.width && bullet.top <= alien.top + alien.height && bullet.top >= alien.top){
+
+            // add score
+            score = score + 10;
+            scoreDIV.innerText = "Score : " + score;
+
+            // reposition alien
+            reposition(alien);
+
+            // hide this bullet
+            bullet.top = -100;
+            bullet.element.style.top = bullet.top + "px";
+
+          }
+        }
+      }
+
+      // redraw aliens if cleared
+      let brokenCount = 0;
+      for(let alien of aliens){
+        if( alien.broken ){
+          brokenCount = brokenCount + 1;
+        }
+      }
+      if (brokenCount == 25){
+        alienSpeed = alienSpeed + 0.01;
+        initaliens();
+      }
+
+    }
+    
+    function onMousemove(event){
+      spaceshipX = event.clientX;
+      spaceship.style.left = spaceshipX + "px";
+    }
+
+    function onTouchmove(event){
+      spaceshipX = event.touches[0].clientX;
+      spaceship.style.left = spaceshipX + "px";
+    }
+
+    function restartGame(){
+      init();
+      restartDIV.style.display = "none";
+    }
+
+    function reposition(alien){
+      alien.left = Math.random() * (window.innerWidth - alien.width);
+      alien.top = -1 * alien.height;
+      alien.speed = Math.random() * 0.8 + 0.2;
+      
+      alien.element.style.left = alien.left + "px";
+      alien.element.style.top = alien.top + "px";
+    }
+  </script>
+</body>
+</html>
