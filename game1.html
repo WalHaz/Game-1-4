@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallace's Catch Pikachu Game</title>
+    <style> 
+    /* CSS */
+    
+    #food {
+     position: fixed;
+    }
+
+  #line {
+    background-color: yellow;
+    width: 100%;
+    /*height: 20px;*/
+    position: fixed;
+    left: 0;
+    /*bottom: 10px;*/
+
+  }
+
+  #basket {
+      position: fixed;
+   }
+    </style>
+</head>
+<body>
+     <div id="scoreDIV"></div>
+     <div id="restartDIV">
+       Game Over... Press RESTART button to catch Pikachu again <button id="restartButton">RESTART</button>
+     </div>
+    <img id="food" src="pikachu3.png"> 
+    <div id="line"></div>
+    <img id="basket" src="pokeball.png">
+    
+    
+<script>
+   /* JS */
+
+//declaration
+let foodX, foodY, foodWidth, foodHeight;
+let fps, step; 
+let lineY, lineHeight;
+let gameInterval;
+let basketX, basketY, basketWidth, basketHeight;
+let score;
+let multiplier;
+
+//mousecontrol
+document.addEventListener ( "mousemove", onMousemove, false )
+
+// touch control for mobile or tablet
+document.addEventListener("touchmove", onTouchmove, false)
+
+// restart button
+restartButton.addEventListener("click", restartGame, false)
+
+init( );
+
+function init( ){
+  foodWidth = 120;
+  food.style.width = foodWidth + "px"
+  foodHeight = 120
+  food.style.height = foodHeight+ "px"
+  randomPosition( );
+
+  lineHeight = 20;
+  line.style.height = lineHeight + "px"
+  lineY = window.innerHeight - 10 - lineHeight
+  line.style.top = lineY + "px"
+
+  basketWidth = 120;
+  basket.style.width = basketWidth + "px"
+  basketHeight = 120;
+  basket.style.height = basketHeight + "px"
+
+  basketY = lineY - basketHeight;
+  basket.style.top = basketY + "px"
+
+  score = 0;
+  scoreDIV.innerText = "Score : " + score
+
+  restartDIV.style.display = "none";
+
+  // difficulty
+  multiplier = 1.175;
+  
+  
+  fps = 60
+  step = 1
+  gameInterval = setInterval( frame, 1000/fps);
+}
+
+function randomPosition( ){
+    foodX = Math.random( ) * (window.innerWidth - foodWidth);
+    food.style.left = foodX + "px";
+    foodY = 0;
+    food.style.top = foodY + "px";
+}
+
+function frame(){
+  // increment
+  foodY = foodY + step;
+  food.style.top = foodY + "px"
+  
+  // boundary test
+  if( foodY + foodHeight > lineY){
+      clearInterval(gameInterval);
+      restartDIV.style.display = "block"
+  }
+  // collision test
+  if ( foodY + foodHeight > basketY) {
+    if(foodX + foodWidth > basketX && foodX < basketX + basketWidth){
+     randomPosition( );
+
+     // Score
+     score = score + 5
+     scoreDIV.innerText = "Score : " + score
+    
+
+    // Faster and faster
+    step = step * multiplier;
+
+    // Reset Food Position
+    randomPosition( );
+    }
+  }
+}
+
+function onMousemove ( event ) {
+  basketX = event.clientX;
+  basket.style.left = basketX + "px"
+}
+function onTouchmove( event ) {
+  basketX = event.clientX;
+  basket.style.left = basketX + "px"
+}
+
+function restartGame( ){
+  init();
+  restartDIV.style.display = "none";
+}
+
+  
+  
+  </script>
+</body>
+</html>
